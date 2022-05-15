@@ -1,5 +1,7 @@
-<#import "/spring.ftl" as spring>
+<#import "parts/common.ftlh" as c>
+<#import "/spring.ftl" as spring/>
 <@c.page>
+
     <div class="m-5">
         ${message!''}
     </div>
