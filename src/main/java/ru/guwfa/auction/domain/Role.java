@@ -1,4 +1,4 @@
-package ru.guwfa.auction.domain.dataTransferObject;
+package ru.guwfa.auction.domain;
 
 import org.springframework.security.core.GrantedAuthority;
 

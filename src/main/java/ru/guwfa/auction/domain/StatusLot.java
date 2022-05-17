@@ -1,4 +1,4 @@
-package ru.guwfa.auction.domain.dataTransferObject;
+package ru.guwfa.auction.domain;
 
 public enum StatusLot {
     ACTIVE, FINISHED, CANCELED;

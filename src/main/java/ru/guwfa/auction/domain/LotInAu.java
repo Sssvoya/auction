@@ -1,5 +1,4 @@
-package ru.guwfa.auction.domain.dataTransferObject;
-
+package ru.guwfa.auction.domain;
 import javax.persistence.*;
 import java.util.Date;
 import java.util.HashSet;

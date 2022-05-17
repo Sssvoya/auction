@@ -15,12 +15,12 @@ public class RegistrationController {
 
     @PostMapping("/registration")
     public String addUser(){
-
+        return "registration";
     }
 
     @GetMapping("/activate/{code}")
     public String activate(){
-
+        return "login";
     }
 }
 
