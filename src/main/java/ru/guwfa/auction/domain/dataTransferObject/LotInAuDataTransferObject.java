@@ -2,7 +2,7 @@ package ru.guwfa.auction.domain.dataTransferObject;
 
 import java.util.Objects;
 
-public class LotInAuInAuDataTransferObject {
+public class LotInAuDataTransferObject {
     private String name;
     private String description;
     private Long initialRate;
@@ -10,7 +10,7 @@ public class LotInAuInAuDataTransferObject {
     private Integer timeStep;
 
 
-    public LotInAuInAuDataTransferObject() {
+    public LotInAuDataTransferObject() {
     }
     public String getName() {
         return name;
@@ -56,7 +56,7 @@ public class LotInAuInAuDataTransferObject {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        LotInAuInAuDataTransferObject LotInAuInAuDataTransferObject = (LotInAuInAuDataTransferObject) o;
+        LotInAuDataTransferObject LotInAuInAuDataTransferObject = (LotInAuDataTransferObject) o;
         return name.equals(LotInAuInAuDataTransferObject.name) &&
                 Objects.equals(description, LotInAuInAuDataTransferObject.description) &&
                 timeStart.equals(LotInAuInAuDataTransferObject.timeStart);
