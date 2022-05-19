@@ -11,7 +11,13 @@ public class ExchangeService {
 
     public void sendMoney(User userFrom, User userTo, Long value){
 
+        //снимаем деньги с баланса победителя торгов
+        userFrom.setBalance(userFrom.getBalance() - value);
+        UserService.saveUser(userFrom);
 
+        //добавляем ту же сумму создателю лота
+        userTo.setBalance(userTo.getBalance() + value);
+        UserService.saveUser(userTo);
     }
 
 }

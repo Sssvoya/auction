@@ -130,6 +130,114 @@ public class LotInAUservice {
         return LotInAuRepository.findById(id);
     }
 
+    public void finishIfTimeOver() {
+        // завершение торгов за лоты, время торгов которых закончилось
+        for (BigInteger id : LotInAuDataAccessObject.getLotInAuIDataTransferObjectBeUpdated()) {
+            finish(id.longValue());
+        }
+
+    }
+
+    public synchronized void finish(Long LotInAuId) { //synchronized - для запрета одновременного выполнения
+        Optional<LotInAu> optionalLotInAu = LotInAuRepository.findById(LotInAuId);
+
+        if (optionalLotInAu.isPresent()) {
+            LotInAu LotInAu = optionalLotInAu.get();
+
+            // если уже завершен лот (одной из нескольких открытых вкладок)
+            if (!LotInAu.getStatus().equals(StatusLot.ACTIVE.name()))
+                return;
+
+            LotInAu.setStatus(StatusLot.FINISHED.name());
+            Date endDate = new Date(PriceService.getLastByLotInAuId(LotInAuId).getDate().getTime());
+            LotInAu.setEndTime(endDate);
+            LotInAuRepository.save(LotInAu);
+
+            // пользователь с балансом >= ставке (самой поздней по дате)
+            User winner = PriceService.getWinner(LotInAuId);
+
+            if (winner == null) { //если таких пользователей нет, то победителем считается создатель лота
+                winner = LotInAu.getCreator();
+            }
+
+            //перевод денег с баланса победителя торгов на баланс создателя лота
+            if (!winner.equals(LotInAu.getCreator())) // если создатель и победитель не один и тот же пользователь
+                exchangeService.sendMoney(winner, LotInAu.getCreator(), LotInAu.getFinalrate());
+
+            sendMessToWinner(winner, LotInAu, resourceBundle.getString("message.toWinner"));
+
+            sendMessToCreator(LotInAu,
+                    resourceBundle.getString("message.toCreatorIfSuccess"),
+                    resourceBundle.getString("subject.toCreatorIfSuccess")
+            );
+
+            sendMessToSubscribers(LotInAu, resourceBundle.getString("message.toSubscriber"));
+
+            subscriptionService.removeAllSubscribers(LotInAu.getId()); // удаление всех подписчиков
+        }
+    }
+
+    private void sendMessToWinner(User winner, LotInAu LotInAu, String message) {
+        String subject = resourceBundle.getString("subject.toWinner");
+
+        message = String.format(message,
+                winner.getUsername(),
+                LotInAu.getName()
+        );
+
+        mailSender.send(winner.getEmail(), subject, message);
+    }
+
+    private void sendMessToCreator(LotInAu LotInAu, String message, String subject) {
+
+        message = String.format(message,
+                LotInAu.getCreator().getUsername(),
+                LotInAu.getName()
+        );
+        mailSender.send(LotInAu.getCreator().getEmail(), subject, message);
+    }
+
+    private void sendMessToCreator(LotInAu LotInAu, String message, String subject, String reason) {
+
+        message = String.format(message,
+                LotInAu.getCreator().getUsername(),
+                LotInAu.getName(),
+                reason
+        );
+        mailSender.send(LotInAu.getCreator().getEmail(), subject, message);
+    }
+
+    private void sendMessToSubscribers(LotInAu LotInAu, String message) {
+        String subject = resourceBundle.getString("subject.toSubscriber");
+
+        List<User> subscribers = subscriptionService.getAllSubscribersFor(LotInAu.getId());
+
+        for (User sub : subscribers) {
+            message = String.format(message,
+                    sub.getUsername(),
+                    LotInAu.getName(),
+                    LotInAu.getStatus().equals(StatusLot.FINISHED.name()) ? "завершен" : "отменен"
+            );
+            mailSender.send(sub.getEmail(), subject, message);
+        }
+    }
+
+    public void cancelLotInAu(LotInAu LotInAu, String reason) {
+        LotInAu.setStatus(StatusLot.CANCELED.name());
+        LotInAu.setEndTime(new Date());
+        LotInAuRepository.save(LotInAu);
+
+        sendMessToCreator(LotInAu,
+                resourceBundle.getString("message.toCreatorIfCanceled"),
+                resourceBundle.getString("subject.toCreatorIfCanceled"),
+                reason // причина отмены лота
+        );
+
+        // отправка писем всем подписчикам лота об изменении его статуса
+        sendMessToSubscribers(LotInAu, resourceBundle.getString("message.toSubscriber"));
+
+        subscriptionService.removeAllSubscribers(LotInAu.getId()); // удаление всех подписчиков
+    }
 
 
 }
