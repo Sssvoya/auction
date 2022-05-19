@@ -15,4 +15,5 @@ public class MessageDataTransferObject {
         this.text = text;
     }
 
+
 }
